@@ -63,6 +63,13 @@ export type GatewayClientOptions = {
   onConnectError?: (err: Error) => void;
   onClose?: (code: number, reason: string) => void;
   onGap?: (info: { expected: number; received: number }) => void;
+  /**
+   * When true, reconnect timers keep the Node.js event loop alive.
+   * Set this for long-running processes (e.g., node host runner) that
+   * should survive gateway disconnects and reconnect automatically.
+   * Default: false (timers are unref'd so they don't prevent exit).
+   */
+  keepAlive?: boolean;
 };
 
 export const GATEWAY_CLOSE_CODE_HINTS: Readonly<Record<number, string>> = {
@@ -337,7 +344,8 @@ export class GatewayClient {
     }
     const delay = this.backoffMs;
     this.backoffMs = Math.min(this.backoffMs * 2, 30_000);
-    setTimeout(() => this.start(), delay).unref();
+    const timer = setTimeout(() => this.start(), delay);
+    if (!this.opts.keepAlive) timer.unref();
   }
 
   private flushPendingErrors(err: Error) {

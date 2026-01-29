@@ -566,6 +566,7 @@ export async function runNodeHost(opts: NodeHostRunOptions): Promise<void> {
       // eslint-disable-next-line no-console
       console.error(`node host gateway closed (${code}): ${reason}`);
     },
+    keepAlive: true,
   });
 
   const skillBins = new SkillBinsCache(async () => {
